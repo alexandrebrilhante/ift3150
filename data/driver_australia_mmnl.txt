@@ -1,0 +1,57 @@
+# Problem name;
+PROBLEM = "Australia problem";
+
+# name of the output file
+output "results_mmnl";
+
+# number of observations
+nobs = 210;
+np = 210;
+
+# number of aternatives
+nalt = 4;
+
+# number of variables
+nvar = 7;
+
+# number of variable that is the dependant variable (choice)
+iddep = 7;
+
+# 1 if all people do not face nalt alternatives, else 0
+censor = 0;
+
+# maximum number of iterations in the maximization
+niter = 500;
+
+# tolerance for convergence
+eps = 1e-6;
+
+# type of parameters
+btype = { CONSTANT, CONSTANT, CONSTANT,
+          CONSTANT, NORMAL, CONSTANT };
+# starting point
+#b = { -100.0, -200.0, 100.7, -100.4, 100.3, -100.0, -100.0};
+b = { 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+nrep = 1000;
+seed1 = 100;
+#draws = old;
+drawsname = "draws";
+
+# data file
+load "model_australia";
+
+#sampling = lattice;
+
+#method = MCBTRDA;
+method = MCBTR;
+hessian_update = BHHH;
+
+#hessian_approx = false;
+hessian_approx = true;
+robust = true;
+
+bias=0;
+
+# validation = 1;
+validation = 0;

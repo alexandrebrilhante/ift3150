@@ -1,0 +1,47 @@
+# Problem name;
+PROBLEM = "Australia problem";
+
+# name of the output file
+# output "results_mnl";
+
+# number of observations
+nobs = 210;
+np = 210;
+
+# number of aternatives
+nalt = 4;
+
+# number of variables
+nvar = 7;
+
+# number of variable that is the dependant variable (choice)
+iddep = 7;
+
+# 1 if all people do not face nalt alternatives, else 0
+censor = 0;
+
+# maximum number of iterations in the maximization
+niter = 100;
+
+# tolerance for convergence
+eps = 1e-6;
+
+# type of parameters
+btype = { CONSTANT, CONSTANT, CONSTANT,
+          CONSTANT, CONSTANT, CONSTANT };
+# starting point
+b = { 0.0, 0., 0., 0., 0., 0. };
+
+#nrep = 10;
+
+# data file
+load "model_australia";
+
+method = MCBTR;
+#hessian_update = SR1;
+
+#iapprox = true;
+robust = true;
+hessian_approx = false;
+
+validation = true;
