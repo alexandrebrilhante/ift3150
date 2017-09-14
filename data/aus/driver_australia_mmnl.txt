@@ -8,7 +8,7 @@ output "results_mmnl";
 nobs = 210;
 np = 210;
 
-# number of aternatives
+# number of alternatives
 nalt = 4;
 
 # number of variables
