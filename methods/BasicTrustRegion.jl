@@ -1,15 +1,14 @@
-
 using Optim
 
 immutable BasicTrustRegion{T <: Real}
-    η1:: T
-    η2:: T
-    γ1:: T
-    γ2:: T
+    η1::T
+    η2::T
+    γ1::T
+    γ2::T
 end
 
 function BTRDefaults()
-    return BasicTrustRegion(0.01,0.9,0.5,0.5)
+    return BasicTrustRegion(0.01, 0.9, 0.5, 0.5)
 end
 
 type BTRState
@@ -38,7 +37,7 @@ end
 function updateRadius!(state::BTRState, b::BasicTrustRegion)
     if (state.ρ >= b.η2)
         stepnorm = norm(state.step)
-        state.Δ = min(1e20,max(4*stepnorm,state.Δ))
+        state.Δ = min(1e20, max(4*stepnorm, state.Δ))
     elseif (state.ρ >= b.η1)
         state.Δ *= b.γ2
     else
@@ -46,13 +45,13 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function CauchyStep(g::Vector,H::Matrix,Δ::Float64)
-    q = dot(g,H*g)
+function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
+    q = dot(g, H*g)
     normg = norm(g)
     if (q <= 0)
         τ = 1.0
     else
-        τ = min((normg*normg*normg)/(q*Δ),1.0)
+        τ = min((normg*normg*normg)/(q*Δ), 1.0)
     end
     return -τ*g*Δ/normg
 end
@@ -65,7 +64,7 @@ function btr(f::Function, g!::Function, H!::Function,
     state.iter = 0
     state.Δ = 1.0
     state.x = x0
-    n=length(x0)
+    n = length(x0)
 
     tol2 = tol*tol
 
@@ -140,9 +139,9 @@ end
 function H!(x::Vector, storage::Matrix)
     s = H(x)
     n, m = size(s)
-    storage[1:n,1:m] = s[1:length(s)]
+    storage[1:n, 1:m] = s[1:length(s)]
 end
 
-state = btr(f, g!, H!, [0,0],1e-8)
+state = btr(f, g!, H!, [0,0], 1e-8)
 
-state = btr(f, g!, H!, [0,0],1e-7)
+state = btr(f, g!, H!, [0,0], 1e-7)
