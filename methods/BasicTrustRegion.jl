@@ -23,6 +23,7 @@ type BTRState
     function BTRState()
         return new()
     end
+
 end
 
 function acceptCandidate!(state::BTRState, b::BasicTrustRegion)
@@ -56,51 +57,41 @@ function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
     return -τ*g*Δ/normg
 end
 
-function btr(f::Function, g!::Function, H!::Function,
-    x0::Vector, tol::Float64 = 1e-8, verbose::Bool = false)
-
+function btr(f::Function, g!::Function, H!::Function, x0::Vector, tol::Float64 = 1e-8, verbose::Bool = false)
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
     state.Δ = 1.0
     state.x = x0
     n = length(x0)
-
     tol2 = tol*tol
-
     state.g = zeros(n)
-    H = zeros(n,n)
-
+    H = zeros(n, n)
     fx = f(x0)
     g!(x0, state.g)
     H!(x0, H)
-
     nmax = 100000
 
     function model(s::Vector, g::Vector, H::Matrix)
         return dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while (dot(state.g,state.g) > tol2 && state.iter < nmax)
+    while (dot(state.g, state.g) > tol2 && state.iter < nmax)
         # Compute the step by approximately minimize the model
         state.step = CauchyStep(state.g, H, state.Δ)
         state.xcand = state.x+state.step
-
         # Compute the actual reduction over the predicted reduction
         fcand = f(state.xcand)
         state.ρ = (fcand-fx)/(model(state.step, state.g, H))
-
         if (acceptCandidate!(state, b))
             state.x = copy(state.xcand)
             g!(state.x, state.g)
             H!(state.x, H)
             fx = fcand
         end
-
         updateRadius!(state, b)
         state.iter += 1
     end
-
     return state
 end
 
