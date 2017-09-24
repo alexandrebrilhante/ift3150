@@ -1,5 +1,6 @@
-using ForwardDiff
-using Optim
+using DataFrames, ForwardDiff, Optim
+
+df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
     η1::T
@@ -28,7 +29,6 @@ type BTRState
 end
 
 function acceptCandidate!(state::BTRState, b::BasicTrustRegion)
-    # If the iteration is successful, update the iterate
     if state.ρ >= b.η1
         true
     end
@@ -58,30 +58,27 @@ function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
 end
 
 function btr(f::Function, g!::Function, H!::Function,
-        β0::Vector, tol::Float64 = 1e-8, verbose::Bool = false)
+        β0::Vector, δ::Float64 = 1e-8, nmax::Int64 = 100000)
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
     state.Δ = 1.0
     state.β = β0
     n = length(β0)
-    tol2 = tol*tol
+    δ2 = δ*δ
     state.g = zeros(n)
     H = zeros(n, n)
     fβ = f(β0)
     g!(β0, state.g)
     H!(β0, H)
-    nmax = 100000
 
     function model(s::Vector, g::Vector, H::Matrix)
         dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while dot(state.g, state.g) > tol2 && state.iter < nmax
-        # Compute the step by approximately minimize the model
+    while dot(state.g, state.g) > δ2 #&& state.iter < nmax
         state.step = CauchyStep(state.g, H, state.Δ)
         state.βcand = state.β+state.step
-        # Compute the actual reduction over the predicted reduction
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
         if acceptCandidate!(state, b)
@@ -95,8 +92,6 @@ function btr(f::Function, g!::Function, H!::Function,
     end
     state
 end
-
-f(β::Vector) = -10*β[1]^2+10*β[2]^2+4*sin(β[1]*β[2])-2*β[1]+β[1]^4
 
 g = β -> ForwardDiff.gradient(f, β)
 H = β -> ForwardDiff.hessian(f, β)
@@ -112,6 +107,26 @@ function H!(β::Vector, storage::Matrix)
     storage[1:n, 1:m] = s[1:length(s)]
 end
 
-state = btr(f, g!, H!, [0,0], 1e-8)
+function f(β::Vector)
+    i = 1
+    m = 0
+    while i < 7
+        data = convert(Array, df[i:i+5, 1:4])
+        choice = convert(Array, df[i+6:i+6, 1:4])
+        id = find(choice .== 1)
+        alt = find(choice .== 0)
+        n = exp(β[1]*data[4, id][1]+β[2]*data[5, id][1]+β[3]*data[6, id][1])
+        d = (n+
+            exp(β[1]*data[4, alt[1]]+β[2]*data[4, alt[2]]+β[3]*data[4, alt[3]])+
+            exp(β[1]*data[5, alt[1]]+β[2]*data[5, alt[2]]+β[3]*data[5, alt[3]])+
+            exp(β[1]*data[6, alt[1]]+β[2]*data[6, alt[2]]+β[3]*data[6, alt[3]]))
+        m += log(n/d)
+        i += 7
+    end
+    m/1
+end
 
-state = btr(f, g!, H!, [0,0], 1e-7)
+state = btr(f, g!, H!, [0, 0, 0])
+
+println(state.β)
+println(state.iter)
