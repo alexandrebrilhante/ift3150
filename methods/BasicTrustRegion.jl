@@ -90,7 +90,7 @@ function btr(f::Function, g!::Function, H!::Function,
         updateRadius!(state, b)
         state.iter += 1
     end
-    state
+    state.β
 end
 
 g = β -> ForwardDiff.gradient(f, β)
@@ -110,7 +110,7 @@ end
 function f(β::Vector)
     i = 1
     m = 0
-    while i < 7
+    while i < 1465
         data = convert(Array, df[i:i+5, 1:4])
         choice = convert(Array, df[i+6:i+6, 1:4])
         id = find(choice .== 1)
@@ -123,10 +123,7 @@ function f(β::Vector)
         m += log(n/d)
         i += 7
     end
-    m/1
+    m/210
 end
 
-state = btr(f, g!, H!, [0, 0, 0])
-
-println(state.β)
-println(state.iter)
+print(btr(f, g!, H!, [0, 0, 0]))

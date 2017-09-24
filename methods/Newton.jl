@@ -36,7 +36,7 @@ end
 function f(β::Vector)
     i = 1
     m = 0
-    while i < 70
+    while i < 1465
         data = convert(Array, df[i:i+5, 1:4])
         choice = convert(Array, df[i+6:i+6, 1:4])
         id = find(choice .== 1)
@@ -49,7 +49,7 @@ function f(β::Vector)
         m += log(n/d)
         i += 7
     end
-    m/10
+    m/210
 end
 
 println(newton(f, g!, H!, [0, 0, 0]))
