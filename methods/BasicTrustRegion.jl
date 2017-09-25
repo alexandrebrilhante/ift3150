@@ -1,6 +1,6 @@
 using DataFrames, ForwardDiff, Optim
 
-df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
+df = readtable("model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
     η1::T
@@ -25,14 +25,14 @@ type BTRState
     function BTRState()
         return new()
     end
-
 end
 
 function acceptCandidate!(state::BTRState, b::BasicTrustRegion)
     if state.ρ >= b.η1
-        true
+        return true
+    else
+        return false
     end
-    false
 end
 
 function updateRadius!(state::BTRState, b::BasicTrustRegion)
@@ -54,12 +54,11 @@ function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
     else
         τ = min((normg*normg*normg)/(q*Δ), 1.0)
     end
-    -τ*g*Δ/normg
+    return -τ*g*Δ/normg
 end
 
 function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     δ::Float64 = 1e-8
-    nmax::Int64 = 100000
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
@@ -72,17 +71,18 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     fβ = f(β0)
     g!(β0, state.g)
     H!(β0, H)
+    nmax = 100000
 
     function model(s::Vector, g::Vector, H::Matrix)
-        dot(s, g)+0.5*dot(s, H*s)
+        return dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while dot(state.g, state.g) > δ2 && state.iter < nmax
+    while (dot(state.g, state.g) > δ2 && state.iter < nmax)
         state.step = CauchyStep(state.g, H, state.Δ)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
-        if acceptCandidate!(state, b)
+        if (acceptCandidate!(state, b))
             state.β = copy(state.βcand)
             g!(state.β, state.g)
             H!(state.β, H)
@@ -91,10 +91,10 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
         updateRadius!(state, b)
         state.iter += 1
     end
-    state.β
+    return state.β, state.iter
 end
 
-g = β -> ForwardDiff.gradient(f, β)
+g = β -> ForwardDiff.gradient(f, β);
 H = β -> ForwardDiff.hessian(f, β)
 
 function g!(β::Vector, storage::Vector)
@@ -126,4 +126,4 @@ function f(β::Vector)
     m/210
 end
 
-print(btr(f, g!, H!, [0, 0, 0]))
+println(btr(f, g!, H!, [0, 0, 0]))

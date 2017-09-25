@@ -18,7 +18,7 @@ function newton(f::Function, g::Function, h::Function, β0::Vector)
         h(β, H)
         β -= H\dfβ
     end
-    β
+    β, k
 end
 
 g = β -> ForwardDiff.gradient(f, β)
