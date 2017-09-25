@@ -4,7 +4,7 @@ df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
 
 function newton(f::Function, g::Function, h::Function, β0::Vector)
     δ::Float64 = 1e-8
-    nmax::Int64 = 100000
+    nmax::Int64 = 1000
     k = 1
     β = β0
     n = length(β)
@@ -53,4 +53,5 @@ function f(β::Vector)
     m/210
 end
 
+# ([0.0283255, -0.0257532, -0.00362244], 6)
 println(newton(f, g!, H!, [0, 0, 0]))

@@ -1,6 +1,6 @@
 using DataFrames, ForwardDiff, Optim
 
-df = readtable("model_australia.txt", separator = ' ', header = false)
+df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
     η1::T
@@ -71,7 +71,7 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     fβ = f(β0)
     g!(β0, state.g)
     H!(β0, H)
-    nmax = 100000
+    nmax = 1000
 
     function model(s::Vector, g::Vector, H::Matrix)
         return dot(s, g)+0.5*dot(s, H*s)
@@ -126,4 +126,5 @@ function f(β::Vector)
     m/210
 end
 
+# ([-0.258983, 1.30918, 1.1097], 3)
 println(btr(f, g!, H!, [0, 0, 0]))
