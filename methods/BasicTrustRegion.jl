@@ -57,8 +57,9 @@ function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
     -τ*g*Δ/normg
 end
 
-function btr(f::Function, g!::Function, H!::Function,
-        β0::Vector, δ::Float64 = 1e-8, nmax::Int64 = 100000)
+function btr(f::Function, g!::Function, H!::Function, β0::Vector)
+    δ::Float64 = 1e-8
+    nmax::Int64 = 100000
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
@@ -76,7 +77,7 @@ function btr(f::Function, g!::Function, H!::Function,
         dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while dot(state.g, state.g) > δ2 #&& state.iter < nmax
+    while dot(state.g, state.g) > δ2 && state.iter < nmax
         state.step = CauchyStep(state.g, H, state.Δ)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
@@ -110,17 +111,16 @@ end
 function f(β::Vector)
     i = 1
     m = 0
-    while i < 1465
-        data = convert(Array, df[i:i+5, 1:4])
+    while i < 1470
+        data = convert(Array, df[i+3:i+5, 1:4])
         choice = convert(Array, df[i+6:i+6, 1:4])
         id = find(choice .== 1)
         alt = find(choice .== 0)
-        n = exp(β[1]*data[4, id][1]+β[2]*data[5, id][1]+β[3]*data[6, id][1])
-        d = (n+
-            exp(β[1]*data[4, alt[1]]+β[2]*data[4, alt[2]]+β[3]*data[4, alt[3]])+
-            exp(β[1]*data[5, alt[1]]+β[2]*data[5, alt[2]]+β[3]*data[5, alt[3]])+
-            exp(β[1]*data[6, alt[1]]+β[2]*data[6, alt[2]]+β[3]*data[6, alt[3]]))
-        m += log(n/d)
+        n = exp(β[1]*data[1, id][1]+β[2]*data[2, id][1]+β[3]*data[3, id][1])
+        d1 = exp(β[1]*data[1, alt][1]+β[2]*data[2, alt][1]+β[3]*data[3, alt][1])
+        d2 = exp(β[1]*data[1, alt][2]+β[2]*data[2, alt][2]+β[3]*data[3, alt][2])
+        d3 = exp(β[1]*data[1, alt][3]+β[2]*data[2, alt][3]+β[3]*data[3, alt][3])
+        m += log(n/(n+d1+d2+d3))
         i += 7
     end
     m/210
