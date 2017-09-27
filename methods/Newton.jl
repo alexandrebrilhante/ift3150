@@ -50,7 +50,7 @@ function f(β::Vector)
         m += log(n/(n+d1+d2+d3))
         i += 7
     end
-    m/210
+    return m/210
 end
 
 # ([0.0283255, -0.0257532, -0.00362244], 6)

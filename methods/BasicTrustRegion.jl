@@ -10,7 +10,8 @@ immutable BasicTrustRegion{T <: Real}
 end
 
 function BTRDefaults()
-    return BasicTrustRegion(0.01, 0.9, 0.5, 0.5)
+    #return BasicTrustRegion(0.01, 0.9, 0.5, 0.5)
+    return BasicTrustRegion(0.5, 0.5, 0.5, 0.5)
 end
 
 type BTRState
@@ -123,7 +124,7 @@ function f(β::Vector)
         m += log(n/(n+d1+d2+d3))
         i += 7
     end
-    m/210
+    return m/210
 end
 
 # ([-0.258983, 1.30918, 1.1097], 3)
