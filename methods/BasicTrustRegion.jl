@@ -59,7 +59,7 @@ function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
 end
 
 function btr(f::Function, g!::Function, H!::Function, β0::Vector)
-    δ::Float64 = 1e-8
+    δ::Float64 = 1e-6
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
@@ -95,6 +95,8 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     return state.β, state.iter
 end
 
+
+F = β -> ForwardDiff.derivative(f, β)
 g = β -> ForwardDiff.gradient(f, β);
 H = β -> ForwardDiff.hessian(f, β)
 
@@ -124,8 +126,7 @@ function f(β::Vector)
         m += log(n/(n+d1+d2+d3))
         i += 7
     end
-    return m/210
+    return -m/210
 end
 
-# ([-0.258983, 1.30918, 1.1097], 3)
 println(btr(f, g!, H!, [0, 0, 0]))

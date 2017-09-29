@@ -3,7 +3,7 @@ using DataFrames, ForwardDiff, Optim
 df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
 
 function newton(f::Function, g::Function, h::Function, β0::Vector)
-    δ::Float64 = 1e-8
+    δ::Float64 = 1e-6
     nmax::Int64 = 1000
     k = 1
     β = β0
@@ -12,7 +12,7 @@ function newton(f::Function, g::Function, h::Function, β0::Vector)
     H = eye(n)
     dfβ = ones(n)
     g(β, dfβ)
-    while dot(dfβ, dfβ) > δ2 && k <= nmax
+    while (dot(dfβ, dfβ) > δ2 && k <= nmax)
         k += 1
         g(β, dfβ)
         h(β, H)
@@ -21,6 +21,7 @@ function newton(f::Function, g::Function, h::Function, β0::Vector)
     β, k
 end
 
+F = β -> ForwardDiff.derivative(f, β)
 g = β -> ForwardDiff.gradient(f, β)
 H = β -> ForwardDiff.hessian(f, β)
 
@@ -50,8 +51,9 @@ function f(β::Vector)
         m += log(n/(n+d1+d2+d3))
         i += 7
     end
-    return m/210
+    return -m/210
 end
 
-# ([0.0283255, -0.0257532, -0.00362244], 6)
-println(newton(f, g!, H!, [0, 0, 0]))
+f([0, 0, 0])
+
+#println(newton(f, g!, H!, [0, 0, 0]))
