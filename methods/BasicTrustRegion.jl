@@ -115,15 +115,17 @@ function f(β::Vector)
     i = 1
     m = 0
     while i < 1470
-        data = convert(Array, df[i+3:i+5, 1:4])
-        choice = convert(Array, df[i+6:i+6, 1:4])
+        c = 0
+        d = 0
+        data = convert(Array, df[i+3:i+5, :])
+        choice = convert(Array, df[i+6:i+6, :])
         id = find(choice .== 1)
         alt = find(choice .== 0)
-        n = exp(β[1]*data[1, id][1]+β[2]*data[2, id][1]+β[3]*data[3, id][1])
-        d1 = exp(β[1]*data[1, alt][1]+β[2]*data[2, alt][1]+β[3]*data[3, alt][1])
-        d2 = exp(β[1]*data[1, alt][2]+β[2]*data[2, alt][2]+β[3]*data[3, alt][2])
-        d3 = exp(β[1]*data[1, alt][3]+β[2]*data[2, alt][3]+β[3]*data[3, alt][3])
-        m += log(n/(n+d1+d2+d3))
+        c = exp(dot(vec(data[:, id]), β))
+        for j in 1:length(alt)
+            d += exp(dot(vec(data[:, alt[j]]), β))
+        end
+        m += log(c/(c+d))
         i += 7
     end
     return -m/210
