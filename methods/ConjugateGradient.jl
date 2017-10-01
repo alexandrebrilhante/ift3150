@@ -31,11 +31,11 @@ end
 function f(β::Vector)
     i = 1
     m = 0
-    while i < 1470
+    while i <= 210
         c = 0
         d = 0
-        data = convert(Array, df[i+3:i+5, :])
-        choice = convert(Array, df[i+6:i+6, :])
+        data = convert(Array, df[i*7-3:i*7-1, :])
+        choice = convert(Array, df[i*7:i*7, :])
         id = find(choice .== 1)
         alt = find(choice .== 0)
         c = exp(dot(vec(data[:, id]), β))
@@ -43,7 +43,7 @@ function f(β::Vector)
             d += exp(dot(vec(data[:, alt[j]]), β))
         end
         m += log(c/(c+d))
-        i += 7
+        i += 1
     end
     return m/210
 end
