@@ -46,15 +46,28 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
-    q = dot(g, H*g)
-    normg = norm(g)
-    if q <= 0
-        τ = 1.0
-    else
-        τ = min((normg*normg*normg)/(q*Δ), 1.0)
+function ConjugateGradient(A::Matrix, b::Vector, β0::Vector)
+    δ = 1e-6
+    n = length(β0)
+    β = β0
+    g = b+A*β
+    d = -g
+    k = 0
+    δ2 = δ*δ
+    while dot(g, g) > δ2
+        Ad = A*d
+        normd = dot(d, Ad)
+        α = -dot(d, g)/normd
+        β += α*d
+        g = b+A*β
+        γ = dot(g, Ad)/normd
+        d = -g+γ*d
+        k += 1
     end
-    return -τ*g*Δ/normg
+    normd = dot(d, A*d)
+    α = -dot(d, g)/normd
+    β += α*d
+    return β
 end
 
 function btr(f::Function, g!::Function, H!::Function, β0::Vector)
@@ -78,7 +91,7 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     end
 
     while (dot(state.g, state.g) > δ2 && state.iter < nmax)
-        state.step = CauchyStep(state.g, H, state.Δ)
+        state.step = ConjugateGradient(H, state.g, β0)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
