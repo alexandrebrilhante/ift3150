@@ -49,15 +49,16 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector,
-        state::BTRState = BTRState(), ApproxH::Bool = false)
+function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector)
     b = BTRDefaults()
+    state = BTRState()
     state.iter = 0
     state.β = β0
     n = length(β0)
     δ2 = state.δ*state.δ
     state.g = zeros(n)
     H = eye(n, n)
+    ApproxH::Bool = false
     fβ = f(β0)
     g!(β0, state.g)
     state.Δ = 0.1*norm(state.g)
