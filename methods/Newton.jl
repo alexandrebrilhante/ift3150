@@ -56,3 +56,5 @@ function f(β::Vector)
 end
 
 println(newton(f, g!, H!, [0, 0, 0]))
+
+# Solution: ([0.0283255, -0.0257532, -0.00362244], 6)

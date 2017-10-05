@@ -90,7 +90,7 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
         return dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while (dot(state.g, state.g) > δ2 && state.iter < nmax)
+    while (dot(state.g, state.g) > δ2 && state.iter <= nmax)
         state.step = ConjugateGradient(H, state.g, β0)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
@@ -142,3 +142,5 @@ function f(β::Vector)
 end
 
 println(btr(f, g!, H!, [0, 0, 0]))
+
+# Solution: ([0.0283255, -0.0257532, -0.00362244], 4)
