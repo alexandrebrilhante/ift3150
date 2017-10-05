@@ -1,5 +1,7 @@
 using DataFrames, ForwardDiff, Optim
 
+# Conjugate gradient.
+
 df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
@@ -10,7 +12,7 @@ immutable BasicTrustRegion{T <: Real}
 end
 
 function BTRDefaults()
-    return BasicTrustRegion(0.5, 0.5, 0.5, 0.5)
+    return BasicTrustRegion(0.01, 0.9, 0.5, 0.5)
 end
 
 type BTRState
@@ -46,7 +48,7 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function ConjugateGradient(A::Matrix, b::Vector, β0::Vector)
+function cg(A::Matrix, b::Vector, β0::Vector)
     δ = 1e-6
     n = length(β0)
     β = β0
@@ -91,11 +93,11 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     end
 
     while (dot(state.g, state.g) > δ2 && state.iter <= nmax)
-        state.step = ConjugateGradient(H, state.g, β0)
+        state.step = cg(H, state.g, β0)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
-        if (acceptCandidate!(state, b))
+        if acceptCandidate!(state, b)
             state.β = copy(state.βcand)
             g!(state.β, state.g)
             H!(state.β, H)

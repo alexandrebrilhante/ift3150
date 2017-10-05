@@ -1,5 +1,7 @@
 using DataFrames, ForwardDiff, Optim
 
+# Truncated conjugate gradient.
+
 df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
@@ -10,7 +12,7 @@ immutable BasicTrustRegion{T <: Real}
 end
 
 function BTRDefaults()
-    return BasicTrustRegion(0.01,0.9,0.5,0.5)
+    return BasicTrustRegion(0.01, 0.9, 0.5, 0.5)
 end
 
 type BTRState
