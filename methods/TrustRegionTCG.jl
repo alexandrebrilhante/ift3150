@@ -49,8 +49,8 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector)
-state::BTRState = BTRState()
+function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector,
+        state::BTRState = BTRState(), ApproxH::Bool = false)
     b = BTRDefaults()
     state.iter = 0
     state.β = β0
@@ -61,6 +61,12 @@ state::BTRState = BTRState()
     fβ = f(β0)
     g!(β0, state.g)
     state.Δ = 0.1*norm(state.g)
+    if ApproxH
+        y = zeros(n)
+        gcand = zeros(n)
+    else
+        H!(β0, H)
+    end
     nmax = 1000
 
     function model(s::Vector, g::Vector, H::Matrix)
@@ -72,8 +78,19 @@ state::BTRState = BTRState()
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
+        if ApproxH
+            g!(state.βcand, gcand)
+            y = gcand-state.g;
+            H = H!(H, y, state.step)
+        end
         if acceptCandidate!(state, b)
             state.β = copy(state.βcand)
+            if ApproxH == false
+                g!(state.β, state.g)
+                H!(state.β, H)
+            else
+                state.g = copy(gcand)
+            end
             fβ = fcand
         end
         updateRadius!(state, b)
@@ -85,7 +102,7 @@ end
 function stopCG(normg::Float64, normg0::Float64, k::Int, kmax::Int)
     χ::Float64 = 0.1
     θ::Float64 = 0.5
-    if ((k == kmax) || (normg <= normg0*min(χ, normg0^θ)))
+    if (k == kmax) || (normg <= normg0*min(χ, normg0^θ))
         return true
     else
         return false
