@@ -127,7 +127,7 @@ function TruncatedCG(g::Vector, H::Matrix, Δ::Float64)
     while stopCG(norm(g), normg0, k, n) == false
         Hd = H*d
         κ = dot(d, Hd)
-        if (κ <= 0)
+        if κ <= 0
             σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
             s += σ*d
             break
@@ -148,7 +148,7 @@ function TruncatedCG(g::Vector, H::Matrix, Δ::Float64)
         d = -v+β*d
         sMd = β*(sMd+α*norm2d)
         norm2d = gv+β*β*norm2d
-        k += 1;
+        k += 1
     end
     return s
 end

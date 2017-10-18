@@ -72,7 +72,7 @@ function ConjugateGradient(A::Matrix, b::Vector, β0::Vector)
     return β
 end
 
-function btr(f::Function, g!::Function, H!::Function, β0::Vector)
+function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector)
     δ::Float64 = 1e-6
     b = BTRDefaults()
     state = BTRState()
@@ -93,7 +93,7 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
     end
 
     while (dot(state.g, state.g) > δ2 && state.iter <= nmax)
-        state.step = ConjugateGradient(H, state.g, β0)
+        state.step = Step(H, state.g, β0)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
@@ -143,6 +143,6 @@ function f(β::Vector)
     return -m/210
 end
 
-println(btr(f, g!, H!, [0, 0, 0]))
+println(btr(f, g!, H!, ConjugateGradient, [0, 0, 0]))
 
 # Solution: ([0.0283255, -0.0257532, -0.00362244], 4)
