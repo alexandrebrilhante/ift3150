@@ -1,6 +1,6 @@
 using DataFrames, ForwardDiff, Optim
 
-df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
+df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
 function newton(f::Function, g::Function, h::Function, β0::Vector)
     δ::Float64 = 1e-6

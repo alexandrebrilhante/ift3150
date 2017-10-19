@@ -2,7 +2,7 @@ using DataFrames, ForwardDiff, Optim
 
 # Truncated conjugate gradient.
 
-df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
+df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
     η1::T
@@ -48,6 +48,57 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
         state.Δ *= b.γ2
     else
         state.Δ *= b.γ1
+    end
+end
+
+function TruncatedCG(g::Vector, H::Matrix, Δ::Float64)
+    n = length(g)
+    s = zeros(n)
+    normg0 = norm(g)
+    v = g
+    d = -v
+    gv = dot(g, v)
+    norm2d = gv
+    norm2s = 0
+    sMd = 0
+    k = 0
+    Δ2 = Δ*Δ
+    while stopCG(norm(g), normg0, k, n) == false
+        Hd = H*d
+        κ = dot(d, Hd)
+        if κ <= 0
+            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
+            s += σ*d
+            break
+        end
+        α = gv/κ
+        norm2s += α*(2*sMd+α*norm2d)
+        if norm2s >= Δ2
+            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
+            s += σ*d
+            break
+        end
+        s += α*d
+        g += α*Hd
+        v = g
+        newgv = dot(g, v)
+        β = newgv/gv
+        gv = newgv
+        d = -v+β*d
+        sMd = β*(sMd+α*norm2d)
+        norm2d = gv+β*β*norm2d
+        k += 1
+    end
+    return s
+end
+
+function stopCG(normg::Float64, normg0::Float64, k::Int, kmax::Int)
+    χ::Float64 = 0.1
+    θ::Float64 = 0.5
+    if (k == kmax) || (normg <= normg0*min(χ, normg0^θ))
+        return true
+    else
+        return false
     end
 end
 
@@ -100,57 +151,6 @@ function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vecto
         state.iter += 1
     end
     return state.β, state.iter
-end
-
-function stopCG(normg::Float64, normg0::Float64, k::Int, kmax::Int)
-    χ::Float64 = 0.1
-    θ::Float64 = 0.5
-    if (k == kmax) || (normg <= normg0*min(χ, normg0^θ))
-        return true
-    else
-        return false
-    end
-end
-
-function TruncatedCG(g::Vector, H::Matrix, Δ::Float64)
-    n = length(g)
-    s = zeros(n)
-    normg0 = norm(g)
-    v = g
-    d = -v
-    gv = dot(g, v)
-    norm2d = gv
-    norm2s = 0
-    sMd = 0
-    k = 0
-    Δ2 = Δ*Δ
-    while stopCG(norm(g), normg0, k, n) == false
-        Hd = H*d
-        κ = dot(d, Hd)
-        if κ <= 0
-            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
-            s += σ*d
-            break
-        end
-        α = gv/κ
-        norm2s += α*(2*sMd+α*norm2d)
-        if norm2s >= Δ2
-            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
-            s += σ*d
-            break
-        end
-        s += α*d
-        g += α*Hd
-        v = g
-        newgv = dot(g, v)
-        β = newgv/gv
-        gv = newgv
-        d = -v+β*d
-        sMd = β*(sMd+α*norm2d)
-        norm2d = gv+β*β*norm2d
-        k += 1
-    end
-    return s
 end
 
 g = β -> ForwardDiff.gradient(f, β);

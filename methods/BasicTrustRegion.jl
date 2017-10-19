@@ -1,6 +1,6 @@
 using DataFrames, ForwardDiff, Optim
 
-df = readtable("data/aus/model_australia.txt", separator = ' ', header = false)
+df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
 immutable BasicTrustRegion{T <: Real}
     η1::T
