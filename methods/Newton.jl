@@ -1,4 +1,4 @@
-using DataFrames, ForwardDiff, Optim
+using DataFrames, ForwardDiff
 
 df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
