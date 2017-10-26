@@ -1,10 +1,10 @@
-using DataFrames, ForwardDiff, Optim
+using DataFrames, ForwardDiff
 
 # Truncated conjugate gradient.
 
 df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
-immutable BasicTrustRegion{T <: Real}
+immutable BasicTrustRegion{T<:Real}
     η1::T
     η2::T
     γ1::T
@@ -23,12 +23,9 @@ type BTRState
     step::Vector
     Δ::Float64
     ρ::Float64
-    δ::Float64
 
     function BTRState()
-        state = new()
-        state.δ = 1e-8
-        return state
+        return new()
     end
 end
 
@@ -62,19 +59,19 @@ function TruncatedCG(g::Vector, H::Matrix, Δ::Float64)
     norm2s = 0
     sMd = 0
     k = 0
-    Δ2 = Δ*Δ
+    Δ = Δ*Δ
     while stopCG(norm(g), normg0, k, n) == false
         Hd = H*d
         κ = dot(d, Hd)
         if κ <= 0
-            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
+            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ-dot(s, s))))/norm2d
             s += σ*d
             break
         end
         α = gv/κ
         norm2s += α*(2*sMd+α*norm2d)
-        if norm2s >= Δ2
-            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ2-dot(s, s))))/norm2d
+        if norm2s >= Δ
+            σ = (-sMd+sqrt(sMd*sMd+norm2d*(Δ-dot(s, s))))/norm2d
             s += σ*d
             break
         end
@@ -102,13 +99,13 @@ function stopCG(normg::Float64, normg0::Float64, k::Int, kmax::Int)
     end
 end
 
-function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector)
+function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector, δ::Float64 = 1e-6, nmax::Int = 1000)
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
     state.β = β0
     n = length(β0)
-    δ2 = state.δ*state.δ
+    δ *= δ
     state.g = zeros(n)
     H = eye(n, n)
     ApproxH::Bool = false
@@ -121,20 +118,19 @@ function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vecto
     else
         H!(β0, H)
     end
-    nmax = 1000
 
     function model(s::Vector, g::Vector, H::Matrix)
         return dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while (dot(state.g, state.g) > δ2 && state.iter < nmax)
+    while (dot(state.g, state.g) > δ && state.iter < nmax)
         state.step = Step(state.g, H, state.Δ)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
         state.ρ = (fcand-fβ)/(model(state.step, state.g, H))
         if ApproxH
             g!(state.βcand, gcand)
-            y = gcand-state.g;
+            y = gcand-state.g
             H = H!(H, y, state.step)
         end
         if acceptCandidate!(state, b)

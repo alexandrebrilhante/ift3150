@@ -1,8 +1,8 @@
-using DataFrames, ForwardDiff, Optim
+using DataFrames, ForwardDiff
 
 df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
-immutable BasicTrustRegion{T <: Real}
+immutable BasicTrustRegion{T<:Real}
     η1::T
     η2::T
     γ1::T
@@ -57,15 +57,14 @@ function CauchyStep(g::Vector, H::Matrix, Δ::Float64)
     return -τ*g*Δ/normg
 end
 
-function btr(f::Function, g!::Function, H!::Function, β0::Vector)
-    δ::Float64 = 1e-6
+function btr(f::Function, g!::Function, H!::Function, β0::Vector, δ::Float64 = 1e-6)
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
     state.Δ = 1.0
     state.β = β0
     n = length(β0)
-    δ2 = δ*δ
+    δ *= δ
     state.g = zeros(n)
     H = zeros(n, n)
     fβ = f(β0)
@@ -77,7 +76,7 @@ function btr(f::Function, g!::Function, H!::Function, β0::Vector)
         return dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while (dot(state.g, state.g) > δ2 && state.iter <= nmax)
+    while (dot(state.g, state.g) > δ && state.iter <= nmax)
         state.step = CauchyStep(state.g, H, state.Δ)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)
@@ -131,4 +130,3 @@ end
 println(btr(f, g!, H!, [0, 0, 0]))
 
 # Solution: ([0.0283255, -0.0257532, -0.00362244], 39)
-

@@ -1,10 +1,10 @@
-using DataFrames, ForwardDiff, Optim
+using DataFrames, ForwardDiff
 
 # Conjugate gradient.
 
 df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
-immutable BasicTrustRegion{T <: Real}
+immutable BasicTrustRegion{T<:Real}
     η1::T
     η2::T
     γ1::T
@@ -48,15 +48,14 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function ConjugateGradient(A::Matrix, b::Vector, β0::Vector)
-    δ = 1e-6
+function ConjugateGradient(A::Matrix, b::Vector, β0::Vector, δ::Float64 = 1e-6)
     n = length(β0)
     β = β0
     g = b+A*β
     d = -g
     k = 0
-    δ2 = δ*δ
-    while dot(g, g) > δ2
+    δ *= δ
+    while dot(g, g) > δ
         Ad = A*d
         normd = dot(d, Ad)
         α = -dot(d, g)/normd
@@ -72,27 +71,25 @@ function ConjugateGradient(A::Matrix, b::Vector, β0::Vector)
     return β
 end
 
-function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector)
-    δ::Float64 = 1e-6
+function btr(f::Function, g!::Function, H!::Function, Step::Function, β0::Vector, δ::Float64 = 1e-6, nmax::Int = 1000)
     b = BTRDefaults()
     state = BTRState()
     state.iter = 0
     state.Δ = 1.0
     state.β = β0
     n = length(β0)
-    δ2 = δ*δ
+    δ *= δ
     state.g = zeros(n)
     H = zeros(n, n)
     fβ = f(β0)
     g!(β0, state.g)
     H!(β0, H)
-    nmax = 1000
 
     function model(s::Vector, g::Vector, H::Matrix)
         return dot(s, g)+0.5*dot(s, H*s)
     end
 
-    while (dot(state.g, state.g) > δ2 && state.iter <= nmax)
+    while (dot(state.g, state.g) > δ && state.iter <= nmax)
         state.step = Step(H, state.g, β0)
         state.βcand = state.β+state.step
         fcand = f(state.βcand)

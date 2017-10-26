@@ -2,17 +2,15 @@ using DataFrames, ForwardDiff, Optim
 
 df = readtable("../data/aus/model_australia.txt", separator = ' ', header = false)
 
-function newton(f::Function, g::Function, h::Function, β0::Vector)
-    δ::Float64 = 1e-6
-    nmax::Int64 = 1000
+function newton(f::Function, g::Function, h::Function, β0::Vector, δ::Float64 = 1e-6, nmax::Int64 = 1000)
     k = 1
     β = β0
     n = length(β)
-    δ2 = δ*δ
+    δ *= δ
     H = eye(n)
     dfβ = ones(n)
     g(β, dfβ)
-    while (dot(dfβ, dfβ) > δ2 && k <= nmax)
+    while (dot(dfβ, dfβ) > δ && k <= nmax)
         k += 1
         g(β, dfβ)
         h(β, H)
