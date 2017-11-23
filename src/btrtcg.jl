@@ -1,4 +1,3 @@
-
 using BenchmarkTools, Compat, DataFrames, Distributions, ForwardDiff
 
 # Basic trust region with truncated conjugate gradient.
@@ -6,8 +5,6 @@ using BenchmarkTools, Compat, DataFrames, Distributions, ForwardDiff
 df = readtable("../data/model_australia.txt", separator = ' ', header = false)
 
 names!(df, [Symbol("x$i") for i in 1:4])
-
-head(df)
 
 mixed_logit = DataFrame(P = 1.0:210.0)
 
@@ -54,8 +51,6 @@ function individual(θ::Vector, i::Int64)
 
     return probability
 end
-
-head(mixed_logit)
 
 function f(θ::Vector, model::Float64 = 0.0, n::Int64 = 210)
     i = 1
@@ -275,7 +270,11 @@ function SR1!(B::Matrix, y::Vector, s::Vector)
     B[1:n, 1:m] = SR1(B, y, s)
 end
 
+
 println(btr(f, g!, H!, TruncatedCG, zeros(7), BTRState()))
+
 #println(btr(f, g!, BHHH!, TruncatedCG, zeros(7), BTRState()))
+
 println(btr(f, g!, BFGS!, TruncatedCG, zeros(7), BTRState(), true))
+
 println(btr(f, g!, SR1!, TruncatedCG, zeros(7), BTRState(), true))

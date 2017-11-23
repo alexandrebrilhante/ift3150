@@ -1,11 +1,8 @@
-
 using BenchmarkTools, Compat, DataFrames, Distributions, ForwardDiff
 
 df = readtable("../data/model_australia.txt", separator = ' ', header = false)
 
 names!(df, [Symbol("x$i") for i in 1:4])
-
-head(df)
 
 mixed_logit = DataFrame(P = 1.0:210.0)
 
@@ -52,8 +49,6 @@ function individual(θ::Vector, i::Int64)
 end
 
 simulate()
-
-head(mixed_logit)
 
 function f(θ::Vector, model::Float64 = 0.0, n::Int64 = 210)
     i = 1

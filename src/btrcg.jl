@@ -1,4 +1,3 @@
-
 using BenchmarkTools, Compat, DataFrames, Distributions, ForwardDiff
 
 # Basic trust region with conjugate gradient.
@@ -6,8 +5,6 @@ using BenchmarkTools, Compat, DataFrames, Distributions, ForwardDiff
 df = readtable("../data/model_australia.txt", separator = ' ', header = false)
 
 names!(df, [Symbol("C$i") for i in 1:4])
-
-head(df)
 
 mixed_logit = DataFrame(P = 1.0:210.0)
 
@@ -54,8 +51,6 @@ function individual(θ::Vector, i::Int64)
 
     return probability
 end
-
-head(mixed_logit)
 
 function f(θ::Vector, model::Float64 = 0.0, n::Int64 = 210)
     i = 1
@@ -114,7 +109,8 @@ function updateRadius!(state::BTRState, b::BasicTrustRegion)
     end
 end
 
-function ConjugateGradient(A::Matrix, b::Vector, x0::Vector, tol::Float64 = 1e-6)
+function ConjugateGradient(A::Matrix, b::Vector, x0::Vector,
+        tol::Float64 = 1e-6)
     n = length(x0)
     x = x0
     g = b+A*x
@@ -248,6 +244,9 @@ function SR1!(B::Matrix, y::Vector, s::Vector)
 end
 
 println(btr(f, g!, H!, ConjugateGradient, zeros(7), BTRState()))
+
 #println(btr(f, g!, BHHH!, ConjugateGradient, zeros(7), BTRState()))
+
 println(btr(f, g!, BFGS!, ConjugateGradient, zeros(7), BTRState(), true))
+
 println(btr(f, g!, SR1!, ConjugateGradient, zeros(7), BTRState(), true))
